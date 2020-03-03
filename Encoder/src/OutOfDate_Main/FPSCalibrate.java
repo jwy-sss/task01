@@ -1,4 +1,4 @@
-package zDemo;
+package OutOfDate_Main;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -18,7 +18,7 @@ import settings.*;
  */
 @SuppressWarnings("unused")
 public class FPSCalibrate {
-	public static String outputpath = PATH.OUTPUTPATH;
+	public static String outputpath = Options.OUTPUTPATH;
 	
 	public static void main(String args[]) {
 		
@@ -91,7 +91,7 @@ public class FPSCalibrate {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		System.out.println("[FPSCalibrate] MP4 Path:\n\t\t"+PATH.OUTPUTPATH+timestamp+".mp4");
+		System.out.println("[FPSCalibrate] MP4 Path:\n\t\t"+Options.OUTPUTPATH+timestamp+".mp4");
 	}
 	
 	private int preframeLeft = 0; 

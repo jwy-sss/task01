@@ -31,12 +31,11 @@ namespace BS {
 		// 图像二值化
 		Mat src_gray = src.clone();
 		Mat src_threshold;
-		// 不再对图像进行平滑处理
-		//blur(src, src, Size(2, 2));
 		// 彩色图转灰度图
 		cvtColor(src, src_gray, CV_BGR2GRAY);
 		// 指定75阀值进行二值化
 		threshold(src_gray, src_threshold, 75, 255, THRESH_BINARY);
+		imwrite(string(PATH_HELLO_OUT) + string("black.png"), src_threshold);
 
 		// 轮廓操作
 		vector<CONTOUR_TYPE> contours, contoursOfBlock;

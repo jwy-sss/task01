@@ -29,7 +29,7 @@ namespace DC {
 					temp = 0;
 				}
 			}
-		cout << sout;
+		cout << endl << sout << endl;
 		return;
 	}
 

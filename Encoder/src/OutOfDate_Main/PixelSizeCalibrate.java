@@ -1,4 +1,4 @@
-package zDemo;
+package OutOfDate_Main;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -9,7 +9,7 @@ import javax.imageio.*;
 import settings.*;
 
 public class PixelSizeCalibrate {
-	public static String outputpath = PATH.OUTPUTPATH;
+	public static String outputpath = Options.OUTPUTPATH;
 	
 	
 	public static void main(String args[]) {
