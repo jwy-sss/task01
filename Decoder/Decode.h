@@ -16,5 +16,5 @@ using namespace std;
 using namespace BS;
 
 namespace DC {
-	void decode(string imgname);
+	void decode();
 }

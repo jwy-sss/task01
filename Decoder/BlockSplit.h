@@ -11,5 +11,5 @@ namespace BS {
 	using namespace std;
 	using namespace cv;
 
-	vector<vector<vector<Point>>> getAllInfoCenters(const Mat& src);
+	vector<vector<vector<Point>>> getAllInfoCenters(const Mat& src, int frame);
 }

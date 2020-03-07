@@ -3,6 +3,9 @@ package encoder;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
+import java.nio.channels.FileChannel;
+import java.util.Random;
+
 import javax.imageio.*;
 
 import settings.*;
@@ -17,6 +20,7 @@ public class Enc {
 		this(Options.INPUT_FILENAME);
 	}
 	public Enc(String FilePath) {
+		
 		// 文件检查
 		File file = new File(FilePath);
 		if (!file.isFile() || !file.exists()) {
@@ -36,6 +40,7 @@ public class Enc {
 				f.delete();
 		}
 		System.out.println("Output directory prepared: " + dir.getPath());
+		
 		
 		// 文件读取
 		byte[] content = null; // 一次性读取10M内容
@@ -58,31 +63,45 @@ public class Enc {
 		int framecount = (int)Math.ceil( 	// 总的帧数
 			(double)(offset + filesizeByte * 4) / (frameCap - csSize - frmIDSize)
 		);
+		// 制作前导帧
+		for (int frame = 0; frame < Options.preframe; frame++) {
+			encodeImgWhite(frame);
+		}
+		// 制作有效关键帧
 		for (int frame = 0; frame < framecount; frame++) {
 			if (frame % 50 == 0 && frame > 0)
 				System.out.println(""+frame+" frame have been generated.");
 			byte[] cells = new byte[frameCap];	// java中byte初始值为0
 			for (int i = csSize; i < frameCap; i++) {
+				int p2bit = 0;
 				if (frame == 0 && i >= csSize+frmIDSize  && i < offset + csSize+frmIDSize) {
 					// 把filesize信息写入流
-					cells[i] = (byte)((filesizeByte >> (offset-i+csSize+frmIDSize)*2) & 0x0003);
+					cells[i] = (byte)((filesizeByte >> (offset+csSize+frmIDSize-1-i)*2) & 0x0003);
 				} else if (i >= csSize && i < csSize + frmIDSize) {
-					cells[i] = (byte)((Options.frmidlist[frame%3] >> (frmIDSize-i+csSize)*2) & 0x0003);
+					// 写入frame ID
+					cells[i] = (byte)((Options.frmidlist[frame%3] >> (frmIDSize+csSize-1-i)*2) & 0x0003);
 				} else {
 					// 把文件信息写入流
-					int p2bit = (frameCap - csSize - frmIDSize)*frame + i - csSize - frmIDSize - offset; // 读取文件的位置指针(按2bit计)
-					if (p2bit/4 == filesizeByte) {
-						break;
-					}
+					p2bit = (frameCap - csSize - frmIDSize)*frame + i - csSize - frmIDSize - offset; // 读取文件的位置指针(按2bit计)
 					cells[i] = (byte)((content[p2bit/4] >> (3 - p2bit % 4)*2) & 0x0003);
 				}
 				cells[i%csSize] = (byte)((cells[i%csSize] + cells[i]) % 4);
+				if (p2bit == filesizeByte * 4 - 1) { // 使用-1防止数据正好占满整数页时数组越界的情况
+					break;
+				}
 			}
 			this.encodeImg(frame, cells, filesizeByte);
 		}
-		System.out.println("Encoder: "+framecount+" frames output.");
+		// 制作结尾帧率
+		for (int frame = framecount+Options.preframe; frame < framecount+Options.preframe+Options.tailframe; frame++) {
+			encodeImgWhite(frame);
+		}
+		System.out.println("Encoder: "+(framecount+Options.preframe+Options.tailframe)*2+" frames output.");
+		
+		
+		// 合成视频 
 		try {
-			FFMPEG.generateVideo(Options.ENC_OUTPUTPATH+"Enc%d.png", Options.ENC_OUTMP4NAME, Options.FPS);
+			FFMPEG.generateVideoV2(Options.ENC_OUTPUTPATH+"Enc%d.png", Options.ENC_OUTMP4NAME, Options.Str_FPS);
 		} catch (Exception e) {
 			System.out.println("Met Error when Generated Video: "+Options.ENC_OUTMP4NAME);
 			System.exit(0);
@@ -121,11 +140,74 @@ public class Enc {
 			}
 		}
 		try {
-			ImageIO.write(image, "PNG", new File(Options.ENC_OUTPUTPATH+"Enc"+frame+".png"));
+			ImageIO.write(image, "PNG", new File(Options.ENC_OUTPUTPATH+"Enc"+(frame+Options.preframe)+".png"));
+//			copyFile(
+//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame+Options.preframe)*2)+".png"),
+//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame+Options.preframe)*2+1)+".png")
+//					);
 		} catch (IOException e) {
+			System.out.println("Function encodeImg error: writing into "+"Enc"+(frame+Options.preframe)+".png");
+			System.exit(0);
+		}
+		return;
+	}
+	/**随机序列有数亿分之一的概率被识别为关键帧*/
+	private void encodeImgWhite(int frame) {
+		int blockCap = Options.blockCap;	// block capacity 方块容量 每帧能够容纳多少个2bit格子
+		Color[] clist = {Color.red, Color.green, Color.blue, Color.black};
+		Random r = new Random(Options.randomseed+(new Random()).nextInt(1000));
+		
+		BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
+		Graphics g = image.getGraphics();
+		g.setColor(Color.white);
+		g.fillRect(0, 0, 1920, 1080);
+		for (int block = 0; block < 18; block++) {
+			int x = Options.xlocation + (block) % 6 * Options.xspan;
+			int y = Options.ylocation + (block) / 6 * Options.yspan;
+			g.setColor(Color.black);
+			g.fillRect(x, y,
+					2*Options.border+Options.xsplit*Options.cellsize,
+					2*Options.border+Options.ysplit*Options.cellsize);
+			for (int i = 0; i < blockCap; i++) {
+				g.setColor(clist[(r.nextInt(clist.length))%clist.length]);
+				g.fillRect(
+						x + Options.border + Options.cellsize*(i%Options.xsplit),
+						y + Options.border + Options.cellsize*(i/Options.xsplit),
+						Options.cellsize, Options.cellsize);
+			}
+		}
+		try {
+			ImageIO.write(image, "PNG", new File(Options.ENC_OUTPUTPATH+"Enc"+frame+".png"));
+//			copyFile(
+//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame)*2)+".png"),
+//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame)*2+1)+".png")
+//					);
+		} catch (IOException e) {
+			e.printStackTrace();
 			System.out.println("Function encodeImg error: writing into "+"Enc"+frame+".png");
 			System.exit(0);
 		}
 		return;
+	}
+	/**
+	 * Copy from
+	 * https://www.cnblogs.com/zq-boke/p/8523710.html
+	 */
+	private static void copyFile(File source, File dest) throws IOException {    
+		FileInputStream fin = new FileInputStream(source);
+		FileOutputStream fout = new FileOutputStream(dest);
+        FileChannel inputChannel = null;    
+        FileChannel outputChannel = null;    
+        try {
+        	inputChannel = fin.getChannel();
+        	outputChannel = fout.getChannel();
+        	outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        } finally {
+        	inputChannel.close();
+        	outputChannel.close();
+        	fin.close();
+        	fout.close();
+        }
+        return;
 	}
 }

@@ -14,7 +14,8 @@
 using namespace cv;
 using namespace std;
 using namespace BS;
+using namespace DC;
 
 int main(int argc, char** argv[]) {
-    DC::decode(PATH_PROC_PNG);
+    decode();
 }

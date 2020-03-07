@@ -7,12 +7,12 @@ public class Options {
 	
 	// 路径设定区
 	// Area Of Paths
-	private static String PATHPrefix = "E:\\NET-Program-Output\\v0.2.00\\";
+	private static String PATHPrefix = "E:\\NET-Program-Output\\v1.0\\";
 	public static String INPUT_FILENAME = PATHPrefix + "NetIn.G24";
 	public static String ENC_OUTPUTPATH = PATHPrefix + "EncResult\\";
 	public static String ENC_OUTMP4NAME = "Enc00Out.mp4";
 	public static String FFMPEGPATH = "D:\\Program-Folders\\ffmpeg\\bin\\ffmpeg.exe";
-	// 由static {}块进行进一步，如果内存盘Q盘存在，会自动修改目录至Q盘
+	// 由static {}块进行的一步，如果内存盘Q盘存在，会自动修改目录至Q盘
 	static {
 		File Q = new File("Q:/");
 		if (Q.exists()) {
@@ -32,6 +32,10 @@ public class Options {
 	// 视频参数常量设置区
 	// Area Of Video Consts
 	public static int FPS = 15;
+	public static String Str_FPS = "9.87";
+	public static int preframe = 10;
+	public static int tailframe = 5;
+	public static int randomseed = 24; // 二十四组专用随机数！乌拉！
 	
 	// 单帧参数常量设定区
 	// Area Of Single Frame Consts
@@ -39,7 +43,7 @@ public class Options {
 	public static int cellsize = 10;
 	
 	/**每个Block方块的边框宽度*/
-	public static int border = 4;
+	public static int border = 5;
 	
 	/**每个Block在X方向的列数*/
 	public static int xsplit  = 30;
@@ -47,14 +51,14 @@ public class Options {
 	public static int ysplit  = 34;
 	
 	/**第一个Block方块左上角的X坐标*/
-	public static int xlocation = 16;
+	public static int xlocation = 15;
 	/**第一个Block方块左上角的Y坐标*/
-	public static int ylocation = 10;
+	public static int ylocation = 9;
 	
 	/**各个Block方块左上角坐标的X差值*/
-	public static int xspan = 2*border + xsplit*cellsize + 8;
+	public static int xspan = 2*border + xsplit*cellsize + 6;
 	/**各个Block方块左上角坐标的Y差值*/
-	public static int yspan = 2*border + ysplit*cellsize + 8;
+	public static int yspan = 2*border + ysplit*cellsize + 6;
 	
 	/**4字节容量 表示文件长度（按字节计）的偏移量*/
 	public static int offset = 16;
@@ -63,7 +67,6 @@ public class Options {
 	/**frame id size 帧编号 3个一循环 2字节容量 共计8*2bit格子*/
 	public static int frmIDSize = 8;
 	public static int[] frmidlist = {0x0, 0xAAAA, 0xFFFF};
-	//public static int[] frmidlist = {0x2CB2, 0xB2CB, 0xCB2C};
 	
 	/**block capacity 方块容量 每帧能够容纳多少个2bit格子*/
 	public static int blockCap

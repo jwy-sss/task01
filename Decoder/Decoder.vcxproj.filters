@@ -19,24 +19,24 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BlockSplit.cpp">
-      <Filter>头文件</Filter>
+      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Decode.cpp">
-      <Filter>头文件</Filter>
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Settings.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BlockSplit.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BlockSplit.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
     <ClInclude Include="Decode.h">
-      <Filter>头文件</Filter>
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Settings.h">
+      <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
