@@ -10,7 +10,6 @@
 
 #include "Settings.h"
 
-
 namespace BS {
 	using namespace std;
 	using namespace cv;
@@ -207,7 +206,7 @@ namespace BS {
 		for (int i = 0; i < 4; i++) {
 			noteDot(cornerMat, c[i]);
 		}
-		/*imwrite(DEC_OUTPUTPATH + "centers_"+to_string(888)+"corner.jpg", cornerMat);*/
+		/*imwrite(DEC_DEBUGPATH + "centers_"+to_string(888)+"corner.jpg", cornerMat);*/
 
 		//getInfoCenters ends.
 		return ICMatrix;
@@ -225,12 +224,12 @@ namespace BS {
 
 
 		// OpenCV 初始图像操作素质三连
-		// 克隆、转灰度图、75阀值二值化
+		// 克隆、转灰度图、110阀值二值化
 		Mat src_gray = src.clone();
 		Mat src_threshold;
 		cvtColor(src, src_gray, CV_BGR2GRAY);
 		threshold(src_gray, src_threshold, 110, 255, THRESH_BINARY);
-		/*imwrite(DEC_OUTPUTPATH + "black"+to_string(frame)+".jpg", src_threshold);*/
+		/*imwrite(DEC_DEBUGPATH + "black"+to_string(frame)+".jpg", src_threshold);*/
 
 
 		// 轮廓操作
@@ -322,7 +321,7 @@ namespace BS {
 			if (!islocated) {
 				/*cout << "父轮廓四个角：\n" << parentCorners[3] << parentCorners[2] << endl << parentCorners[0] << parentCorners[1] << endl;*/
 				/*cout << "child " << c << ":\t" << childCorner[c] << " " << "无法定位" << endl;*/
-				/*imwrite(DEC_OUTPUTPATH + "centers" + to_string(frame) + ".jpg", mat4log);*/
+				/*imwrite(DEC_DEBUGPATH + "centers" + to_string(frame) + ".jpg", mat4log);*/
 				return invalid;
 			}
 		}
@@ -355,7 +354,7 @@ namespace BS {
 					);
 				}
 		}
-		/*imwrite(DEC_OUTPUTPATH + "centers"+to_string(frame)+".jpg", mat4log);*/
+		/*imwrite(DEC_DEBUGPATH + "centers"+to_string(frame)+".jpg", mat4log);*/
 		/*cout << string("centers") + to_string(frame) + ".jpg out!" << endl;*/
 		return infocenters;
 	}	
