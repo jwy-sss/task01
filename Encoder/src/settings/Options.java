@@ -27,13 +27,13 @@ public class Options {
 	
 	// 色彩编码集设定区
 	// Area Of Color Set
-	public static Color[] colorset = {Color.red, Color.black, Color.green, Color.blue}; 
+	public static Color[] colorset = {Color.red, new Color(70,70,70), Color.green, new Color(0,0,240)};
 	
 	// 视频参数常量设置区
 	// Area Of Video Consts
-	public static int FPS = 15;
+	public static int FPS = 10;
 	public static String Str_FPS = "9.87";
-	public static int preframe = 10;
+	public static int preframe = 12;
 	public static int tailframe = 5;
 	public static int randomseed = 24; // 二十四组专用随机数！乌拉！
 	

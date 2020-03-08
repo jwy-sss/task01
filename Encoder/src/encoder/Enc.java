@@ -57,11 +57,11 @@ public class Enc {
 		// 如果读取越界，将读取一串黑色，即010101...，ASCII : U
 		int filesizeByte = content.length; 	// 文件体积，按Byte计算
 		int offset = Options.offset;		// 4字节容量 表示文件长度（按字节计）的偏移量
-		int csSize = Options.csSize;		// checksum size 校验和长度	4字节容量 共计16*2bit格子
-		int frameCap = Options.frameCap;	// frame capacity 帧容量 每帧能够容纳多少个2bit格子
-		int frmIDSize = Options.frmIDSize;	// frame id size 帧编号 3个一循环 2字节容量 共计8*2bit格子
+		int csSize = Options.csSize;		// checksum size	校验和长度	4字节容量 共计16*2bit格子
+		int frameCap = Options.frameCap;	// frame capacity	帧容量 每帧能够容纳多少个2bit格子
+		int frmIDSize = Options.frmIDSize;	// frame id size	帧编号 3个一循环 2字节容量 共计8*2bit格子
 		int framecount = (int)Math.ceil( 	// 总的帧数
-			(double)(offset + filesizeByte * 4) / (frameCap - csSize - frmIDSize)
+			(double)(offset + filesizeByte * 4 - 1) / (frameCap - csSize - frmIDSize)
 		);
 		// 制作前导帧
 		for (int frame = 0; frame < Options.preframe; frame++) {
@@ -73,7 +73,6 @@ public class Enc {
 				System.out.println(""+frame+" frame have been generated.");
 			byte[] cells = new byte[frameCap];	// java中byte初始值为0
 			for (int i = csSize; i < frameCap; i++) {
-				int p2bit = 0;
 				if (frame == 0 && i >= csSize+frmIDSize  && i < offset + csSize+frmIDSize) {
 					// 把filesize信息写入流
 					cells[i] = (byte)((filesizeByte >> (offset+csSize+frmIDSize-1-i)*2) & 0x0003);
@@ -82,22 +81,24 @@ public class Enc {
 					cells[i] = (byte)((Options.frmidlist[frame%3] >> (frmIDSize+csSize-1-i)*2) & 0x0003);
 				} else {
 					// 把文件信息写入流
-					p2bit = (frameCap - csSize - frmIDSize)*frame + i - csSize - frmIDSize - offset; // 读取文件的位置指针(按2bit计)
-					cells[i] = (byte)((content[p2bit/4] >> (3 - p2bit % 4)*2) & 0x0003);
+					int p2bit = (frameCap - csSize - frmIDSize)*frame + i - csSize - frmIDSize - offset; // 读取文件的位置指针(按2bit计)
+					if (p2bit < filesizeByte * 4) {
+						// 正常写入
+						cells[i] = (byte)((content[p2bit/4] >> (3 - p2bit % 4)*2) & 0x0003);
+					} else {
+						// 填充空白
+						cells[i] = 1;
+					}
 				}
 				cells[i%csSize] = (byte)((cells[i%csSize] + cells[i]) % 4);
-				if (p2bit == filesizeByte * 4 - 1) { // 使用-1防止数据正好占满整数页时数组越界的情况
-					break;
-				}
 			}
 			this.encodeImg(frame, cells, filesizeByte);
 		}
-		// 制作结尾帧率
+		// 制作结尾帧
 		for (int frame = framecount+Options.preframe; frame < framecount+Options.preframe+Options.tailframe; frame++) {
 			encodeImgWhite(frame);
 		}
-		System.out.println("Encoder: "+(framecount+Options.preframe+Options.tailframe)*2+" frames output.");
-		
+		System.out.println("Encoder: "+(framecount+Options.preframe+Options.tailframe)+" frames output.");
 		
 		// 合成视频 
 		try {
@@ -109,12 +110,13 @@ public class Enc {
 		System.out.println("Video Generated: "+Options.ENC_OUTMP4NAME);
 		return;
 	}
+	/** 将数据打包成图片 */
 	private void encodeImg(int frame, byte[] cells, int filesizeByte) {
 		int offset = Options.offset;		// 4字节容量 表示文件长度（按字节计）的偏移量
-		int csSize = Options.csSize;		// checksum size 校验和长度	4字节容量 共计16*2bit格子
-		int blockCap = Options.blockCap;	// block capacity 方块容量 每帧能够容纳多少个2bit格子
-		int frameCap = Options.frameCap;	// frame capacity 帧容量 每帧能够容纳多少个2bit格子
-		int frmIDSize = Options.frmIDSize;	// frame id size 帧编号 3个一循环 2字节容量 共计8*2bit格子
+		int csSize = Options.csSize;		// checksum size	校验和长度	4字节容量 共计16*2bit格子
+		int blockCap = Options.blockCap;	// block capacity	方块容量 每帧能够容纳多少个2bit格子
+		int frameCap = Options.frameCap;	// frame capacity	帧容量 每帧能够容纳多少个2bit格子
+		int frmIDSize = Options.frmIDSize;	// frame id size	帧编号 3个一循环 2字节容量 共计8*2bit格子
 		
 		BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
 		Graphics g = image.getGraphics();
@@ -141,20 +143,17 @@ public class Enc {
 		}
 		try {
 			ImageIO.write(image, "PNG", new File(Options.ENC_OUTPUTPATH+"Enc"+(frame+Options.preframe)+".png"));
-//			copyFile(
-//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame+Options.preframe)*2)+".png"),
-//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame+Options.preframe)*2+1)+".png")
-//					);
 		} catch (IOException e) {
 			System.out.println("Function encodeImg error: writing into "+"Enc"+(frame+Options.preframe)+".png");
 			System.exit(0);
 		}
 		return;
 	}
-	/**随机序列有数亿分之一的概率被识别为关键帧*/
+	
+	/** 随机序列有数亿分之一的概率被识别为关键帧 */
 	private void encodeImgWhite(int frame) {
 		int blockCap = Options.blockCap;	// block capacity 方块容量 每帧能够容纳多少个2bit格子
-		Color[] clist = {Color.red, Color.green, Color.blue, Color.black};
+		Color[] clist = Options.colorset;
 		Random r = new Random(Options.randomseed+(new Random()).nextInt(1000));
 		
 		BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
@@ -178,10 +177,6 @@ public class Enc {
 		}
 		try {
 			ImageIO.write(image, "PNG", new File(Options.ENC_OUTPUTPATH+"Enc"+frame+".png"));
-//			copyFile(
-//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame)*2)+".png"),
-//					new File(Options.ENC_OUTPUTPATH+"Enc"+((frame)*2+1)+".png")
-//					);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Function encodeImg error: writing into "+"Enc"+frame+".png");
@@ -190,13 +185,13 @@ public class Enc {
 		return;
 	}
 	/**
-	 * Copy from
+	 * Unused. Copy from
 	 * https://www.cnblogs.com/zq-boke/p/8523710.html
 	 */
 	private static void copyFile(File source, File dest) throws IOException {    
 		FileInputStream fin = new FileInputStream(source);
 		FileOutputStream fout = new FileOutputStream(dest);
-        FileChannel inputChannel = null;    
+        FileChannel inputChannel = null;
         FileChannel outputChannel = null;    
         try {
         	inputChannel = fin.getChannel();

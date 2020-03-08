@@ -16,15 +16,17 @@
 // 路径设定区
 // Area Of Paths
 #define PATHPrefix		string("E:\\NET-Program-Output\\v1.0\\")
+#define USE_FFMPEG		(true)
+#define DEC_VIDEOPATH	(PATHPrefix + "VIDEO.mp4")
 #define DEC_INPUTPATH	(PATHPrefix + "DecImg\\")
 #define DEC_PROC_PNG	(DEC_INPUTPATH + "Dec%d.jpg")
 #define DEC_OUTFILENAME	(PATHPrefix + "NetOut.G24")
-#define DEC_OUTPUTPATH	(PATHPrefix + "DecOut\\")
-#define FFMPEGPATH		string("D:\\Program-Folders\\ffmpeg\\bin\\ffmpeg.exe")
+#define DEC_DEBUGPATH	(PATHPrefix + "DecOut\\")
+#define FFMPEG_PATH		string("D:\\Program-Folders\\ffmpeg\\bin\\ffmpeg.exe")
 
 // 视频参数常量设置区
 // Area Of Video Consts
-#define G_preframe 25
+#define G_preframe 12
 #define G_tailframe 5
 #define G_randomseed 24 // 二十四组专用随机数！乌拉！
 
